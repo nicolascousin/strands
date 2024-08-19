@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Strands</title>
+    <script src="https://cdn.jsdelivr.net/npm/fireworks-js@2/dist/fireworks.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -92,6 +93,20 @@
             font-size: 1.2em;
             color: #333;
         }
+        #congratulations {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #dff0d8;
+            color: #3c763d;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            z-index: 1000; /* Assure que le bloc est au-dessus des autres éléments */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Optionnel : ajoute une ombre pour un effet de profondeur */
+        }
     </style>
 </head>
 <body>
@@ -102,6 +117,10 @@
 </h1>
 <div id="grid"></div>
 <div id="counter">Mots trouvés : 0 / 6</div>
+<div id="congratulations">
+    <p>Félicitations ! Vous avez trouvé tous les mots !</p>
+    <button id="nextGridButton">Passer à la grille suivante</button>
+</div>
 
 <script>
     const grids = [{
@@ -273,6 +292,9 @@
                 cell.line = null;
             });
             updateCounter();
+            if (foundWords.length === selectedGrid.wordsToFind.length) {
+                showCongratulations();
+            }
         } else {
             clearSelection();
         }
@@ -285,6 +307,33 @@
         counterElement.textContent = `Mots trouvés : ${foundWordsCount} / ${totalWords}`;
     }
 
+    function showCongratulations() {
+        document.getElementById('congratulations').style.display = 'block';
+
+        const container = document.getElementById('congratulations');
+        const fireworks = new Fireworks(container, {
+            opacity: 0.5,
+            acceleration: 1.05,
+            speed: 2,
+            friction: 0.95,
+            gravity: 1.5,
+            particles: 150,
+            explosion: 5,
+            boundaries: {
+                top: 50,
+                bottom: container.clientHeight,
+                left: 50,
+                right: container.clientWidth - 50
+            }
+        });
+        
+        fireworks.start();
+
+        setTimeout(() => {
+            fireworks.stop();
+        }, 5000); // Le feu d'artifice dure 5 secondes
+    }
+
     gridSelector.addEventListener('change', function() {
         if (foundWords.length > 0 && foundWords.length < selectedGrid.wordsToFind.length) {
             const confirmChange = confirm("Vous avez trouvé des mots mais pas tous. Voulez-vous vraiment changer de grille ?");
@@ -294,6 +343,16 @@
             }
         }
         loadGrid(this.value);
+    });
+
+    document.getElementById('nextGridButton').addEventListener('click', function() {
+        const nextGrid = parseInt(currentGrid, 10) + 1;
+        if (nextGrid <= grids.length) {
+            loadGrid(nextGrid);
+            document.getElementById('congratulations').style.display = 'none';
+        } else {
+            alert("Vous avez terminé toutes les grilles disponibles !");
+        }
     });
 
     populateGridSelector();
