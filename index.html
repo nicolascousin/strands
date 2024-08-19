@@ -75,7 +75,7 @@
         }
 
         .current-selection {
-            background-color: #9ecfff; /* Couleur de la sélection en cours */
+            background-color: #9ecfff !important; /* Couleur de la sélection en cours */
         }
 
         .found-word {
@@ -147,6 +147,7 @@
     let selectedCells = [];
     let foundWords = [];
     let selectedGrid = grids[0];
+    let currentGrid = -1;
     const gridElement = document.getElementById("grid");
     const gridSelector = document.getElementById('gridSelector');
 
@@ -159,8 +160,6 @@
             option.text = `Grille ${index + 1}`;
             gridSelector.appendChild(option);
         });
-
-        loadGrid(gridSelector.value);
     }
 
     function loadGrid(gridNumber) {
@@ -272,6 +271,8 @@
                 cell.line = null;
             });
             updateCounter();
+            localStorage.setItem('currentGrid', currentGrid);
+            localStorage.setItem('foundWords', JSON.stringify(foundWords));
         } else {
             clearSelection();
         }
@@ -296,7 +297,31 @@
         loadGrid(currentGrid);
     });
 
+    function loadSavedState() {
+        const savedGrid = localStorage.getItem('currentGrid');
+        const savedWords = localStorage.getItem('foundWords');
+
+        if (savedGrid && savedWords) {
+            currentGrid = parseInt(savedGrid, 10);
+            document.getElementById('gridSelector').value = currentGrid;
+            loadGrid(currentGrid);
+            
+            foundWords = JSON.parse(savedWords);
+            foundWords.forEach(word => {
+                const wordObj = wordsToFind.find(w => w.word === word);
+                if (wordObj) {
+                    // Simulate marking the word as found
+                    // You can use your existing logic to reapply the styles and lines
+                }
+            });
+        } else {
+            loadGrid(gridSelector.value);
+        }
+
+    }
+
     populateGridSelector();
+    loadSavedState();
 </script>
 
 </body>
