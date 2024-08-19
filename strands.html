@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strands Game - Sun Theme</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+        }
+        h1 {
+            margin-top: 20px;
+            font-size: 1.5em;
+        }
+        #theme {
+            background-color: #d9edf7;
+            color: #31708f;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            text-align: center;
+            width: 80%;
+        }
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(6, 50px);
+            grid-template-rows: repeat(8, 50px);
+            gap: 5px;
+            margin-top: 20px;
+            touch-action: none;
+            position: relative;
+        }
+        .cell {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f0f0f0;
+            font-size: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            user-select: none;
+            border: 2px solid #dddddd;
+            position: relative;
+            z-index: 2;
+        }
+        .highlight {
+            background-color: #9ecfff;
+            color: white;
+        }
+        .spangram {
+            background-color: #f7d358;
+            color: white;
+        }
+        .line {
+            position: absolute;
+            width: 4px;
+            height: 10px;
+            background-color: #9ecfff;
+            transform-origin: 0 0;
+            z-index: 1;
+        }
+        .found-word-line {
+            background-color: #4CAF50;
+        }
+        .spangram-line {
+            background-color: #f7d358;
+        }
+
+        .current-selection {
+            background-color: #9ecfff; /* Couleur de la sélection en cours */
+        }
+
+        .found-word {
+            background-color: #4CAF50; /* Couleur pour les mots trouvés (bleu) */
+            color: white;
+        }
+
+        .found-spangram {
+            background-color: #f7d358; /* Couleur pour le spangram (jaune) */
+            color: white;
+        }
+        #results {
+            margin-top: 20px;
+            padding: 10px;
+            font-size: 1.2em;
+            color: #4CAF50;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Strands Game</h1>
+<div id="theme">Today's Theme: Carle classic</div>
+<div id="grid"></div>
+<div id="results">View Results</div>
+
+<script>
+    const wordsToFind = [
+        { word: "HUNGRYCATERPILLAR", isSpangram: true },
+        { word: "APPLE", isSpangram: false },
+        { word: "SALAMI", isSpangram: false },
+        { word: "WATERMELON", isSpangram: false },
+        { word: "PICKLE", isSpangram: false },
+        { word: "LEAF", isSpangram: false }
+    ];
+
+    const gridLetters = [
+        ["S", "L", "M", "I", "A", "P"],
+        ["A", "A", "N", "G", "L", "P"],
+        ["H", "U", "A", "T", "R", "E"],
+        ["E", "W", "L", "O", "E", "Y"],
+        ["L", "P", "E", "N", "R", "C"],
+        ["K", "C", "I", "M", "A", "R"],
+        ["A", "F", "E", "T", "L", "A"],
+        ["E", "L", "R", "P", "I", "L"]
+    ];
+
+    let selectedCells = [];
+    let foundWords = [];
+    const gridElement = document.getElementById("grid");
+
+    function initializeGrid() {
+        gridLetters.forEach((row, rowIndex) => {
+            row.forEach((letter, colIndex) => {
+                const cell = document.createElement("div");
+                cell.classList.add("cell");
+                cell.textContent = letter;
+                cell.dataset.row = rowIndex;
+                cell.dataset.col = colIndex;
+                cell.dataset.index = `${rowIndex}-${colIndex}`;
+                cell.addEventListener("touchstart", startSelecting);
+                cell.addEventListener("touchmove", continueSelecting);
+                cell.addEventListener("touchend", finishSelecting);
+                gridElement.appendChild(cell);
+            });
+        });
+    }
+
+    function createLine(x1, y1, x2, y2, isSpangram) {
+        const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+        const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
+        const line = document.createElement("div");
+        line.classList.add("line");
+        if (isSpangram) line.classList.add("spangram-line");
+        line.style.width = `${length}px`;
+        line.style.transform = `rotate(${angle}deg)`;
+        line.style.left = `${x1}px`;
+        line.style.top = `${y1}px`;
+        gridElement.appendChild(line);
+        return line;
+    }
+
+    function clearSelection() {
+        selectedCells.forEach(cell => {
+            cell.classList.remove("current-selection");
+            if (cell.line) {
+                gridElement.removeChild(cell.line);
+                cell.line = null;
+            }
+        });
+        selectedCells = [];
+    }
+
+    function startSelecting(e) {
+        e.preventDefault();
+        clearSelection();
+        const cell = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+        if (cell && cell.classList.contains('cell')) {
+            selectedCells = [cell];
+            cell.classList.add("current-selection");
+        }
+    }
+
+    function continueSelecting(e) {
+        e.preventDefault();
+        const cell = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+        if (cell && cell.classList.contains('cell') && !selectedCells.includes(cell)) {
+            const lastCell = selectedCells[selectedCells.length - 1];
+            const dx = Math.abs(lastCell.dataset.row - cell.dataset.row);
+            const dy = Math.abs(lastCell.dataset.col - cell.dataset.col);
+
+            if (dx <= 1 && dy <= 1) {
+                selectedCells.push(cell);
+                cell.classList.add("current-selection");
+
+                const x1 = lastCell.offsetLeft + lastCell.offsetWidth / 2;
+                const y1 = lastCell.offsetTop + lastCell.offsetHeight / 2;
+                const x2 = cell.offsetLeft + cell.offsetWidth / 2;
+                const y2 = cell.offsetTop + cell.offsetHeight / 2;
+
+                cell.line = createLine(x1, y1, x2, y2, false);
+            }
+        } else if (selectedCells.includes(cell)) {
+            const index = selectedCells.indexOf(cell);
+            selectedCells.slice(index + 1).forEach(c => {
+                c.classList.remove("current-selection");
+                if (c.line) {
+                    gridElement.removeChild(c.line);
+                    c.line = null;
+                }
+            });
+            selectedCells = selectedCells.slice(0, index + 1);
+        }
+    }
+
+    function finishSelecting() {
+        const selectedWord = selectedCells.map(cell => cell.textContent).join("");
+        const wordObj = wordsToFind.find(w => w.word === selectedWord);
+    
+        if (wordObj && !foundWords.includes(selectedWord)) {
+            foundWords.push(selectedWord);
+            selectedCells.forEach((cell, index) => {
+                cell.classList.add(wordObj.isSpangram ? "found-spangram" : "found-word");
+                if (cell.line) {
+                    cell.line.classList.add(wordObj.isSpangram ? "spangram-line" : "found-word-line");
+                }
+                cell.line = null;
+            });
+            if (foundWords.length === wordsToFind.length) {
+                document.getElementById("results").style.display = "block";
+            }
+        } else {
+            clearSelection();
+        }
+    }
+
+    initializeGrid();
+</script>
+
+</body>
+</html>
