@@ -96,10 +96,10 @@
 </head>
 <body>
 
-<h1>Strands</h1>
-<select id="gridSelector">
+<h1>Strands <select id="gridSelector">
     <option value="1">Grille 1</option>
 </select>
+</h1>
 <div id="grid"></div>
 <div id="counter">Mots trouvés : 0 / 6</div>
 
@@ -163,6 +163,7 @@
     }
 
     function loadGrid(gridNumber) {
+        currentGrid = gridNumber;
         selectedGrid = grids[gridNumber - 1];
         foundWords = [];
         selectedCells = [];
@@ -265,14 +266,13 @@
             foundWords.push(selectedWord);
             selectedCells.forEach((cell, index) => {
                 cell.classList.add(wordObj.isSpangram ? "found-spangram" : "found-word");
+                cell.classList.remove('current-selection');
                 if (cell.line) {
                     cell.line.classList.add(wordObj.isSpangram ? "spangram-line" : "found-word-line");
                 }
                 cell.line = null;
             });
             updateCounter();
-            localStorage.setItem('currentGrid', currentGrid);
-            localStorage.setItem('foundWords', JSON.stringify(foundWords));
         } else {
             clearSelection();
         }
@@ -293,35 +293,11 @@
                 return;
             }
         }
-        currentGrid = this.value;
-        loadGrid(currentGrid);
+        loadGrid(this.value);
     });
 
-    function loadSavedState() {
-        const savedGrid = localStorage.getItem('currentGrid');
-        const savedWords = localStorage.getItem('foundWords');
-
-        if (savedGrid && savedWords) {
-            currentGrid = parseInt(savedGrid, 10);
-            document.getElementById('gridSelector').value = currentGrid;
-            loadGrid(currentGrid);
-            
-            foundWords = JSON.parse(savedWords);
-            foundWords.forEach(word => {
-                const wordObj = wordsToFind.find(w => w.word === word);
-                if (wordObj) {
-                    // Simulate marking the word as found
-                    // You can use your existing logic to reapply the styles and lines
-                }
-            });
-        } else {
-            loadGrid(gridSelector.value);
-        }
-
-    }
-
     populateGridSelector();
-    loadSavedState();
+    loadGrid(gridSelector.value);
 </script>
 
 </body>
