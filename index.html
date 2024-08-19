@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Strands Game - Sun Theme</title>
+    <title>Strands</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -97,37 +97,85 @@
 <body>
 
 <h1>Strands</h1>
-<div id="select-grid">Grille : 1</div>
+<select id="gridSelector">
+    <option value="1">Grille 1</option>
+</select>
 <div id="grid"></div>
 <div id="counter">Mots trouvés : 0 / 6</div>
 
 <script>
-    const wordsToFind = [
-        { word: "HUNGRYCATERPILLAR", isSpangram: true },
-        { word: "APPLE", isSpangram: false },
-        { word: "SALAMI", isSpangram: false },
-        { word: "WATERMELON", isSpangram: false },
-        { word: "PICKLE", isSpangram: false },
-        { word: "LEAF", isSpangram: false }
-    ];
-
-    const gridLetters = [
-        ["S", "L", "M", "I", "A", "P"],
-        ["A", "A", "N", "G", "L", "P"],
-        ["H", "U", "A", "T", "R", "E"],
-        ["E", "W", "L", "O", "E", "Y"],
-        ["L", "P", "E", "N", "R", "C"],
-        ["K", "C", "I", "M", "A", "R"],
-        ["A", "F", "E", "T", "L", "A"],
-        ["E", "L", "R", "P", "I", "L"]
-    ];
+    const grids = [{
+        wordsToFind: [
+            { word: "HUNGRYCATERPILLAR", isSpangram: true },
+            { word: "APPLE", isSpangram: false },
+            { word: "SALAMI", isSpangram: false },
+            { word: "WATERMELON", isSpangram: false },
+            { word: "PICKLE", isSpangram: false },
+            { word: "LEAF", isSpangram: false }
+        ],
+        gridLetters: [
+            ["S", "L", "M", "I", "A", "P"],
+            ["A", "A", "N", "G", "L", "P"],
+            ["H", "U", "A", "T", "R", "E"],
+            ["E", "W", "L", "O", "E", "Y"],
+            ["L", "P", "E", "N", "R", "C"],
+            ["K", "C", "I", "M", "A", "R"],
+            ["A", "F", "E", "T", "L", "A"],
+            ["E", "L", "R", "P", "I", "L"]
+        ]
+    },{
+        wordsToFind: [
+            { word: "HUNGRYCATERPILLAR", isSpangram: true },
+            { word: "APPLE", isSpangram: false },
+            { word: "AALAMI", isSpangram: false },
+            { word: "WATERMELON", isSpangram: false },
+            { word: "PICKLE", isSpangram: false },
+            { word: "LEAF", isSpangram: false }
+        ],
+        gridLetters: [
+            ["A", "L", "M", "I", "A", "P"],
+            ["A", "A", "N", "G", "L", "P"],
+            ["H", "U", "A", "T", "R", "E"],
+            ["E", "W", "L", "O", "E", "Y"],
+            ["L", "P", "E", "N", "R", "C"],
+            ["K", "C", "I", "M", "A", "R"],
+            ["A", "F", "E", "T", "L", "A"],
+            ["E", "L", "R", "P", "I", "L"]
+        ]
+    }];
 
     let selectedCells = [];
     let foundWords = [];
+    let selectedGrid = grids[0];
     const gridElement = document.getElementById("grid");
+    const gridSelector = document.getElementById('gridSelector');
+
+    function populateGridSelector() {
+        gridSelector.innerHTML = ''; // Vide le contenu actuel
+
+        grids.forEach((_, index) => {
+            const option = document.createElement('option');
+            option.value = index + 1;
+            option.text = `Grille ${index + 1}`;
+            gridSelector.appendChild(option);
+        });
+
+        loadGrid(gridSelector.value);
+    }
+
+    function loadGrid(gridNumber) {
+        selectedGrid = grids[gridNumber - 1];
+        foundWords = [];
+        selectedCells = [];
+
+        // Initialisez la grille avec les nouvelles données
+        initializeGrid();
+        updateCounter(); // Réinitialisez le compteur
+    }
 
     function initializeGrid() {
-        gridLetters.forEach((row, rowIndex) => {
+        gridElement.innerHTML = ''; // Réinitialise la grille
+        selectedGrid.gridLetters.forEach((row, rowIndex) => {
             row.forEach((letter, colIndex) => {
                 const cell = document.createElement("div");
                 cell.classList.add("cell");
@@ -212,7 +260,7 @@
 
     function finishSelecting() {
         const selectedWord = selectedCells.map(cell => cell.textContent).join("");
-        const wordObj = wordsToFind.find(w => w.word === selectedWord);
+        const wordObj = selectedGrid.wordsToFind.find(w => w.word === selectedWord);
     
         if (wordObj && !foundWords.includes(selectedWord)) {
             foundWords.push(selectedWord);
@@ -231,12 +279,24 @@
 
     function updateCounter() {
         const counterElement = document.getElementById('counter');
-        const totalWords = wordsToFind.length;
+        const totalWords = selectedGrid.wordsToFind.length;
         const foundWordsCount = foundWords.length;
         counterElement.textContent = `Mots trouvés : ${foundWordsCount} / ${totalWords}`;
     }
 
-    initializeGrid();
+    gridSelector.addEventListener('change', function() {
+        if (foundWords.length > 0 && foundWords.length < selectedGrid.wordsToFind.length) {
+            const confirmChange = confirm("Vous avez trouvé des mots mais pas tous. Voulez-vous vraiment changer de grille ?");
+            if (!confirmChange) {
+                this.value = currentGrid; // Revenir à la grille actuelle
+                return;
+            }
+        }
+        currentGrid = this.value;
+        loadGrid(currentGrid);
+    });
+
+    populateGridSelector();
 </script>
 
 </body>
