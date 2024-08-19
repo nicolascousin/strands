@@ -102,10 +102,27 @@
             background-color: #dff0d8;
             color: #3c763d;
             padding: 20px;
-            border-radius: 8px;
+            border-radius: 20px;
             text-align: center;
-            z-index: 1000; /* Assure que le bloc est au-dessus des autres éléments */
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Optionnel : ajoute une ombre pour un effet de profondeur */
+            z-index: 1000;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            font-size: 1.2em;
+        }
+        #nextGridButton {
+            background-color: #f0f0f0;
+            border: 2px solid #ddd;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            color: #333;
+            font-size: 1em;
+            outline: none;
+            transition: background-color 0.3s, color 0.3s;
+            margin-top: 10px;
+        }
+
+        #nextGridButton:hover {
+            background-color: #ffeb3b;
         }
         #selectedWordLabel {
             font-size: 1.5em;
@@ -123,6 +140,18 @@
         #selectedWordLabel.success {
             color: #4CAF50;
             animation: pop 0.5s ease-in-out;
+        }
+        #gridSelector {
+            background-color: #f0f0f0;
+            border: 2px solid #ddd;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            color: #333;
+            font-size: 1em;
+            outline: none;
+            margin-left: 10px;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         @keyframes shake {
@@ -146,7 +175,7 @@
     <option value="1">Grille 1</option>
 </select>
 </h1>
-<div id="selectedWordLabel"></div>
+<div id="selectedWordLabel">&nbsp;</div>
 <div id="grid"></div>
 <div id="counter">Mots trouvés : 0 / 6</div>
 <div id="congratulations">
@@ -240,6 +269,7 @@
                 gridElement.appendChild(cell);
             });
         });
+        document.getElementById('selectedWordLabel').innerHTML = "&nbsp;";
     }
 
     function createLine(x1, y1, x2, y2, isSpangram) {
