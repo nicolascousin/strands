@@ -107,6 +107,37 @@
             z-index: 1000; /* Assure que le bloc est au-dessus des autres éléments */
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Optionnel : ajoute une ombre pour un effet de profondeur */
         }
+        #selectedWordLabel {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            color: #333;
+            transition: color 0.3s, transform 0.3s;
+            text-align: center;
+        }
+
+        #selectedWordLabel.error {
+            animation: shake 0.5s;
+            color: #ff4d4d;
+        }
+
+        #selectedWordLabel.success {
+            color: #4CAF50;
+            animation: pop 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
     </style>
 </head>
 <body>
@@ -115,6 +146,7 @@
     <option value="1">Grille 1</option>
 </select>
 </h1>
+<div id="selectedWordLabel"></div>
 <div id="grid"></div>
 <div id="counter">Mots trouvés : 0 / 6</div>
 <div id="congratulations">
@@ -257,6 +289,9 @@
                 selectedCells.push(cell);
                 cell.classList.add("current-selection");
 
+                const selectedWord = selectedCells.map(cell => cell.textContent).join("");
+                document.getElementById('selectedWordLabel').textContent = selectedWord;
+
                 const x1 = lastCell.offsetLeft + lastCell.offsetWidth / 2;
                 const y1 = lastCell.offsetTop + lastCell.offsetHeight / 2;
                 const x2 = cell.offsetLeft + cell.offsetWidth / 2;
@@ -279,6 +314,7 @@
 
     function finishSelecting() {
         const selectedWord = selectedCells.map(cell => cell.textContent).join("");
+        const wordLabel = document.getElementById('selectedWordLabel');
         const wordObj = selectedGrid.wordsToFind.find(w => w.word === selectedWord);
     
         if (wordObj && !foundWords.includes(selectedWord)) {
@@ -291,11 +327,17 @@
                 }
                 cell.line = null;
             });
+            wordLabel.textContent = selectedWord;
+            wordLabel.classList.add('success');
+            setTimeout(() => wordLabel.classList.remove('success'), 1000);
             updateCounter();
             if (foundWords.length === selectedGrid.wordsToFind.length) {
                 showCongratulations();
             }
         } else {
+            wordLabel.textContent = "Désolé, pas dans la liste 😔";
+            wordLabel.classList.add('error');
+            setTimeout(() => wordLabel.classList.remove('error'), 1000);
             clearSelection();
         }
     }
