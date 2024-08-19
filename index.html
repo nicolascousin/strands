@@ -87,21 +87,19 @@
             background-color: #f7d358; /* Couleur pour le spangram (jaune) */
             color: white;
         }
-        #results {
+        #counter {
             margin-top: 20px;
-            padding: 10px;
             font-size: 1.2em;
-            color: #4CAF50;
-            display: none;
+            color: #333;
         }
     </style>
 </head>
 <body>
 
-<h1>Strands Game</h1>
-<div id="theme">Today's Theme: Carle classic</div>
+<h1>Strands</h1>
+<div id="select-grid">Grille : 1</div>
 <div id="grid"></div>
-<div id="results">View Results</div>
+<div id="counter">Mots trouvés : 0 / 6</div>
 
 <script>
     const wordsToFind = [
@@ -225,12 +223,17 @@
                 }
                 cell.line = null;
             });
-            if (foundWords.length === wordsToFind.length) {
-                document.getElementById("results").style.display = "block";
-            }
+            updateCounter();
         } else {
             clearSelection();
         }
+    }
+
+    function updateCounter() {
+        const counterElement = document.getElementById('counter');
+        const totalWords = wordsToFind.length;
+        const foundWordsCount = foundWords.length;
+        counterElement.textContent = `Mots trouvés : ${foundWordsCount} / ${totalWords}`;
     }
 
     initializeGrid();
