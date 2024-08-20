@@ -387,12 +387,15 @@
         document.getElementById('congratulations').style.display = 'block';
 
         const container = document.getElementById('congratulations');
-        const fireworks = new Fireworks.default(container);
         fireworks.start();
 
         setTimeout(() => {
             fireworks.stop();
         }, 5000); // Le feu d'artifice dure 5 secondes
+    }
+
+    function hideCongratulations() {
+        document.getElementById('congratulations').style.display = 'none';
     }
 
     gridSelector.addEventListener('change', function() {
@@ -414,7 +417,25 @@
             document.getElementById('congratulations').style.display = 'none';
         } else {
             alert("Vous avez terminé toutes les grilles disponibles !");
+            hideCongratulations();
         }
+    });
+
+    
+    const fireworks = new Fireworks.default(container, {
+        hue: { min: 0, max: 360 },
+        rocketsPoint: 50, 
+        speed: 2,
+        acceleration: 1.05,
+        friction: 0.98,
+        gravity: 1.5,
+        particles: 100,
+        trace: 3,
+        explosion: 5,
+        autoresize: false,
+        brightness: { min: 50, max: 80 },
+        boundaries: { top: 0, bottom: container.clientHeight, left: 0, right: container.clientWidth },
+        sound: { enable: true, files: ['explosion0.mp3', 'explosion1.mp3', 'explosion2.mp3'], volume: { min: 4, max: 8 } }
     });
 
     populateGridSelector();
