@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Strands</title>
-    <script src="https://cdn.jsdelivr.net/npm/fireworks-js@2/dist/fireworks.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fireworks-js@2.10.8/dist/index.umd.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -387,22 +387,7 @@
         document.getElementById('congratulations').style.display = 'block';
 
         const container = document.getElementById('congratulations');
-        const fireworks = new Fireworks(container, {
-            opacity: 0.5,
-            acceleration: 1.05,
-            speed: 2,
-            friction: 0.95,
-            gravity: 1.5,
-            particles: 150,
-            explosion: 5,
-            boundaries: {
-                top: 50,
-                bottom: container.clientHeight,
-                left: 50,
-                right: container.clientWidth - 50
-            }
-        });
-        
+        const fireworks = new Fireworks.default(container);
         fireworks.start();
 
         setTimeout(() => {
