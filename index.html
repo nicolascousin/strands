@@ -354,11 +354,13 @@
     
         if (wordObj && !foundWords.includes(selectedWord)) {
             foundWords.push(selectedWord);
+            const wordClass = `word-${selectedWord}`;
+
             selectedCells.forEach((cell, index) => {
-                cell.classList.add(wordObj.isSpangram ? "found-spangram" : "found-word");
+                cell.classList.add(wordObj.isSpangram ? "found-spangram" : "found-word", wordClass);
                 cell.classList.remove('current-selection');
                 if (cell.line) {
-                    cell.line.classList.add(wordObj.isSpangram ? "spangram-line" : "found-word-line");
+                    cell.line.classList.add(wordObj.isSpangram ? "spangram-line" : "found-word-line", wordClass);
                 }
                 cell.line = null;
             });
@@ -366,6 +368,13 @@
             wordLabel.classList.add('success');
             setTimeout(() => wordLabel.classList.remove('success'), 1000);
             updateCounter();
+
+            selectedCells.forEach(cell => {
+                cell.addEventListener('dblclick', function () {
+                    removeWord(selectedWord);
+                });
+            });
+
             if (foundWords.length === selectedGrid.wordsToFind.length) {
                 showCongratulations();
             }
@@ -374,6 +383,27 @@
             wordLabel.classList.add('error');
             setTimeout(() => wordLabel.classList.remove('error'), 1000);
             clearSelection();
+        }
+    }
+
+    function removeWord(word) {
+        const wordIndex = foundWords.indexOf(word);
+        if (wordIndex !== -1) {
+            foundWords.splice(wordIndex, 1); // Retirer le mot de la liste des mots trouvés
+
+            const wordClass = `word-${word}`;
+            const elements = document.querySelectorAll(`.${wordClass}`);
+            
+            elements.forEach(element => {
+                element.classList.remove("found-word", "found-spangram", "found-word-line", "spangram-line", wordClass);
+                
+                // Supprimer les lignes correspondantes
+                if (element.classList.contains('line')) {
+                    element.remove();
+                }
+            });
+
+            updateCounter(); // Mettre à jour le compteur de mots trouvés
         }
     }
 
