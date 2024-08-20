@@ -365,17 +365,15 @@
                     cell.line.classList.add(wordObj.isSpangram ? "spangram-line" : "found-word-line", wordClass);
                 }
                 cell.line = null;
+
+                addTapHoldListener(cell, function() {
+                    removeWord(selectedWord);
+                });
             });
             wordLabel.textContent = selectedWord;
             wordLabel.classList.add('success');
             setTimeout(() => wordLabel.classList.remove('success'), 1000);
             updateCounter();
-
-            selectedCells.forEach(cell => {
-                cell.addEventListener('taphold', function () {
-                    removeWord(selectedWord);
-                });
-            });
 
             if (foundWords.length === selectedGrid.wordsToFind.length) {
                 showCongratulations();
@@ -386,6 +384,28 @@
             setTimeout(() => wordLabel.classList.remove('error'), 1000);
             clearSelection();
         }
+    }
+
+    function addTapHoldListener(element, callback, holdTime = 750) {
+        let timer = null;
+
+        element.addEventListener('touchstart', function() {
+            timer = setTimeout(() => {
+                callback(); // Appeler la fonction de rappel après le temps défini
+            }, holdTime);
+        });
+
+        element.addEventListener('touchend', function() {
+            if (timer) {
+                clearTimeout(timer); // Annuler si le doigt est levé avant la fin du holdTime
+            }
+        });
+
+        element.addEventListener('touchmove', function() {
+            if (timer) {
+                clearTimeout(timer); // Annuler si le doigt se déplace
+            }
+        });
     }
 
     function removeWord(word) {
