@@ -389,7 +389,7 @@
 
         if(!fireworks) {
             const container = document.getElementById('congratulations');
-            const fireworks = new Fireworks.default(container, {
+            fireworks = new Fireworks.default(container, {
                 hue: { min: 0, max: 360 },
                 rocketsPoint: 50, 
                 speed: 2,
