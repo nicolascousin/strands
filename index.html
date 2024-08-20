@@ -179,7 +179,7 @@
 <div id="grid"></div>
 <div id="counter">Mots trouvés : 0 / 6</div>
 <div id="congratulations">
-    <p>Félicitations ! Vous avez trouvé tous les mots !</p>
+    <p>Félicitations ! Vous avez terminé cette grille !</p>
     <button id="nextGridButton">Passer à la grille suivante</button>
 </div>
 
@@ -196,8 +196,8 @@
             { word: "DORE", isSpangram: false }
         ],
         gridLetters: [
-            ["L", "I", "M", "R", "E", "U"],
-            ["C", "A", "D", "O", "N", "A"],
+            ["L", "I", "M", "R", "U", "N"],
+            ["C", "A", "D", "O", "A", "E"],
             ["T", "L", "A", "L", "E", "J"],
             ["E", "R", "I", "E", "O", "S"],
             ["V", "E", "R", "E", "C", "L"],
@@ -388,8 +388,7 @@
         document.getElementById('congratulations').style.display = 'block';
 
         if(!fireworks) {
-            const container = document.getElementById('congratulations');
-            fireworks = new Fireworks.default(container, {
+            fireworks = new Fireworks.default(gridElement, {
                 hue: { min: 0, max: 360 },
                 rocketsPoint: 50, 
                 speed: 2,
@@ -401,7 +400,7 @@
                 explosion: 5,
                 autoresize: false,
                 brightness: { min: 50, max: 80 },
-                boundaries: { top: 0, bottom: container.clientHeight, left: 0, right: container.clientWidth },
+                boundaries: { top: 0, bottom: gridElement.clientHeight, left: 0, right: gridElement.clientWidth },
                 sound: { enable: true, files: ['explosion0.mp3', 'explosion1.mp3', 'explosion2.mp3'], volume: { min: 4, max: 8 } }
             });
         }
