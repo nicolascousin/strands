@@ -246,8 +246,8 @@
     }
 
     function loadGrid(gridNumber) {
-        currentGrid = gridNumber;
-        selectedGrid = grids[gridNumber - 1];
+        currentGrid = gridNumber == -1 ? 1 : gridNumber;
+        selectedGrid = grids[currentGrid - 1];
         foundWords = [];
         selectedCells = [];
         localStorage.setItem('currentGrid', currentGrid);
