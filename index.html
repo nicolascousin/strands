@@ -170,6 +170,10 @@
             50% { transform: scale(1.2); }
             100% { transform: scale(1); }
         }
+
+        .pop-effect {
+            animation: pop 0.5s ease-in-out;
+        }
     </style>
 </head>
 <body>
@@ -359,7 +363,7 @@
             const wordClass = `word-${selectedWord}`;
 
             selectedCells.forEach((cell, index) => {
-                cell.classList.add(wordObj.isSpangram ? "found-spangram" : "found-word", wordClass);
+                cell.classList.add(wordObj.isSpangram ? "found-spangram" : "found-word", wordClass, "pop-effect");
                 cell.classList.remove('current-selection');
                 if (cell.line) {
                     cell.line.classList.add(wordObj.isSpangram ? "spangram-line" : "found-word-line", wordClass);
@@ -369,6 +373,11 @@
                 addTapHoldListener(cell, function() {
                     removeWord(selectedWord);
                 });
+
+                // Supprimer l'effet pop après l'animation pour réinitialiser l'état
+                setTimeout(() => {
+                    cell.classList.remove("pop-effect");
+                }, 500);
             });
             wordLabel.textContent = selectedWord;
             wordLabel.classList.add('success');
