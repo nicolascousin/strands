@@ -421,8 +421,8 @@
         }
     });
 
-    
-    const fireworks = new Fireworks.default(container, {
+    const fireworksContainer = document.getElementById('congratulations');
+    const fireworks = new Fireworks.default(fireworksContainer, {
         hue: { min: 0, max: 360 },
         rocketsPoint: 50, 
         speed: 2,
