@@ -249,6 +249,7 @@
 
     function loadGrid(gridNumber) {
         currentGrid = gridNumber == -1 ? 1 : gridNumber;
+        gridSelector.value = currentGrid;
         selectedGrid = grids[currentGrid - 1];
         foundWords = [];
         selectedCells = [];
