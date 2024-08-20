@@ -250,6 +250,7 @@
         selectedGrid = grids[gridNumber - 1];
         foundWords = [];
         selectedCells = [];
+        localStorage.setItem('currentGrid', currentGrid);
 
         // Initialisez la grille avec les nouvelles données
         initializeGrid();
@@ -423,6 +424,7 @@
     document.getElementById('nextGridButton').addEventListener('click', function() {
         const nextGrid = parseInt(currentGrid, 10) + 1;
         if (nextGrid <= grids.length) {
+            gridSelector.value = nextGrid;
             loadGrid(nextGrid);
             document.getElementById('congratulations').style.display = 'none';
         } else {
@@ -431,7 +433,8 @@
     });
 
     populateGridSelector();
-    loadGrid(gridSelector.value);
+    const savedGrid = localStorage.getItem('currentGrid');
+    loadGrid(savedGrid ? savedGrid : gridSelector.value);
 </script>
 
 </body>
