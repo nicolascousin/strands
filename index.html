@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Strands</title>
-    <script src="https://cdn.jsdelivr.net/npm/fireworks-js@2.10.8/dist/index.umd.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -98,19 +97,23 @@
             position: fixed;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: #dff0d8;
-            color: #3c763d;
+            transform: translate(-50%, -50%) scale(0);
+            background-color: #ffeb3b;
+            color: #333;
             padding: 20px;
             border-radius: 20px;
             text-align: center;
             z-index: 1000;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            font-size: 1.2em;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+            font-size: 1.5em;
+            transition: transform 0.5s ease-in-out;
+        }
+        #congratulations.show {
+            transform: translate(-50%, -50%) scale(1);
         }
         #nextGridButton {
-            background-color: #f0f0f0;
-            border: 2px solid #ddd;
+            background-color: #ffffff;
+            border: 2px solid #333;
             padding: 10px 20px;
             border-radius: 20px;
             cursor: pointer;
@@ -118,11 +121,11 @@
             font-size: 1em;
             outline: none;
             transition: background-color 0.3s, color 0.3s;
-            margin-top: 10px;
+            margin-top: 15px;
         }
-
         #nextGridButton:hover {
             background-color: #ffeb3b;
+            color: #000;
         }
         #selectedWordLabel {
             font-size: 1.5em;
@@ -170,7 +173,6 @@
     </style>
 </head>
 <body>
-
 <h1>Strands <select id="gridSelector">
     <option value="1">Grille 1</option>
 </select>
@@ -231,7 +233,6 @@
     let foundWords = [];
     let selectedGrid = grids[0];
     let currentGrid = -1;
-    let fireworks = null;
     const gridElement = document.getElementById("grid");
     const gridSelector = document.getElementById('gridSelector');
 
@@ -416,29 +417,6 @@
 
     function showCongratulations() {
         document.getElementById('congratulations').style.display = 'block';
-
-        if(!fireworks) {
-            fireworks = new Fireworks.default(gridElement, {
-                hue: { min: 0, max: 360 },
-                rocketsPoint: 50, 
-                speed: 2,
-                acceleration: 1.05,
-                friction: 0.98,
-                gravity: 1.5,
-                particles: 100,
-                trace: 3,
-                explosion: 5,
-                autoresize: false,
-                brightness: { min: 50, max: 80 },
-                boundaries: { top: 0, bottom: gridElement.clientHeight, left: 0, right: gridElement.clientWidth },
-                sound: { enable: true, files: ['explosion0.mp3', 'explosion1.mp3', 'explosion2.mp3'], volume: { min: 4, max: 8 } }
-            });
-        }
-        fireworks.start();
-
-        setTimeout(() => {
-            fireworks.stop();
-        }, 5000); // Le feu d'artifice dure 5 secondes
     }
 
     function hideCongratulations() {
