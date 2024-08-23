@@ -171,6 +171,13 @@
         .pop-effect {
             animation: pop 0.5s ease-in-out;
         }
+
+        #themeBlock {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -178,6 +185,7 @@
     <option value="1">Grille 1</option>
 </select>
 </h1>
+<div id="themeBlock"></div>
 <div id="selectedWordLabel">&nbsp;</div>
 <div id="grid"></div>
 <div id="counter">Mots trouvés : 0 / 6</div>
@@ -188,6 +196,7 @@
 
 <script>
     const grids = [{ // Grille 1
+        theme: "Dans le ciel",
         wordsToFind: [
             { word: "SOLAIRES", isSpangram: true },
             { word: "EQUINOXE", isSpangram: false },
@@ -209,6 +218,7 @@
             ["R", "U", "U", "I", "O", "X"]
         ]
     },{ // Grille 2
+        theme: "Soleil",
         wordsToFind: [
             { word: "RAYONNANTE", isSpangram: true },
             { word: "LUMINEUX", isSpangram: false },
@@ -229,6 +239,7 @@
             ["L", "I", "E", "S", "L", "P"]
         ]
     },{ // Grille 3
+        theme: "Journée spéciale",
         wordsToFind: [
             { word: "HAPPYBIRTHDAY", isSpangram: true },
             { word: "CONFETTIS", isSpangram: false },
@@ -249,6 +260,7 @@
             ["U", "O", "M", "Y", "E", "E"]
         ]
     },{ // Grille 4
+        theme: "Réflexion",
         wordsToFind: [
             { word: "REPONSE", isSpangram: true },
             { word: "INTERROGATION", isSpangram: false },
@@ -268,6 +280,7 @@
             ["T","E","T","O","N","S"]
         ]
     },{ // Grille 5
+        theme: "Structure",
         wordsToFind: [
             { word: "PONCTUATION", isSpangram: true },
             { word: "PHRASE", isSpangram: false },
@@ -288,6 +301,7 @@
             ["H","P","N","M","O","S"]
         ]
     },{ // Grille 6
+        theme: "Nature",
         wordsToFind: [
             { word: "ANIMAUX", isSpangram: true },
             { word: "PANTHERE", isSpangram: false },
@@ -309,6 +323,7 @@
             ["U","R","S","E","G","E"]
         ]
     },{ // Grille 7
+        theme: "Tendances et Nouvelles",
         wordsToFind: [
             { word: "MAGAZINE", isSpangram: true },
             { word: "STARS", isSpangram: false },
@@ -329,6 +344,7 @@
             ["N","N","A","R","A","T"]
         ]
     },{ // Grille 8
+        theme: "Couleurs et épices",
         wordsToFind: [
             { word: "GUACAMOLE", isSpangram: true },
             { word: "POIVRON", isSpangram: false },
@@ -349,6 +365,7 @@
             ["E","A","V","G","O","M"]
         ]
     },{ // Grille 9
+        theme: "Palette céleste",
         wordsToFind: [
             { word: "ARCENCIEL", isSpangram: true },
             { word: "ROUGE", isSpangram: false },
@@ -396,6 +413,9 @@
         foundWords = [];
         selectedCells = [];
         localStorage.setItem('currentGrid', currentGrid);
+
+        // Mettre à jour le bloc du thème
+        document.getElementById('themeBlock').textContent = selectedGrid.theme;
 
         // Initialisez la grille avec les nouvelles données
         initializeGrid();
