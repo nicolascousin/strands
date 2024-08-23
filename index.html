@@ -545,7 +545,7 @@
             if (foundWords.length === selectedGrid.wordsToFind.length) {
                 showCongratulations();
             }
-        } if (wordObj && foundWords.includes(selectedWord)) {
+        } else if (wordObj && foundWords.includes(selectedWord)) {
             wordLabel.textContent = "Euh, tu l'avais déjà trouvé celui là !";
             wordLabel.classList.remove('error', 'success');
             clearSelection();
