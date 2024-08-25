@@ -398,7 +398,7 @@
             ["N","G","E","G","A","M"]
         ]
     },{ // Grille 10
-        theme: "Le soleil est revenu !",
+        theme: "Sunny",
         wordsToFind: [
             { word: "IMMENSEMERCI", isSpangram: true },
             { word: "FAMILLE", isSpangram: false },
@@ -573,6 +573,10 @@
             wordLabel.classList.add('success');
             setTimeout(() => wordLabel.classList.remove('success'), 1000);
             updateCounter();
+
+            if(wordObj.isSpangram) {
+                createLine(76.5,76.5,131.5,131.5, true);
+            }
 
             if (foundWords.length === selectedGrid.wordsToFind.length) {
                 showCongratulations();
