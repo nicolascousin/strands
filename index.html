@@ -446,7 +446,7 @@
         const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
         const line = document.createElement("div");
         line.classList.add("line");
-        if (isSpangram) line.classList.add("spangram-line");
+        if (isSpangram) line.classList.add("spangram-line", "grid-" + currentGrid);
         line.style.width = `${length}px`;
         line.style.transform = `rotate(${angle}deg)`;
         line.style.left = `${x1}px`;
@@ -521,10 +521,10 @@
             const wordClass = `word-${selectedWord}`;
 
             selectedCells.forEach((cell, index) => {
-                cell.classList.add(wordObj.isSpangram ? "found-spangram" : "found-word", wordClass, "pop-effect");
+                cell.classList.add(wordObj.isSpangram ? "found-spangram" : "found-word", wordClass, "pop-effect", "grid-" + currentGrid);
                 cell.classList.remove('current-selection');
                 if (cell.line) {
-                    cell.line.classList.add(wordObj.isSpangram ? "spangram-line" : "found-word-line", wordClass);
+                    cell.line.classList.add(wordObj.isSpangram ? "spangram-line" : "found-word-line", wordClass, "grid-" + currentGrid);
                 }
                 cell.line = null;
 
@@ -588,7 +588,7 @@
             const elements = document.querySelectorAll(`.${wordClass}`);
             
             elements.forEach(element => {
-                element.classList.remove("found-word", "found-spangram", "found-word-line", "spangram-line", wordClass);
+                element.classList.remove("found-word", "found-spangram", "found-word-line", "spangram-line", wordClass, "grid-" + currentGrid);
                 
                 // Supprimer les lignes correspondantes
                 if (element.classList.contains('line')) {
