@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strands</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+        }
+        h1 {
+            margin-top: 20px;
+            font-size: 1.5em;
+        }
+        #theme {
+            background-color: #d9edf7;
+            color: #31708f;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            text-align: center;
+            width: 80%;
+        }
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(6, 50px);
+            grid-template-rows: repeat(8, 50px);
+            gap: 5px;
+            margin-top: 20px;
+            touch-action: none;
+            position: relative;
+        }
+        .cell {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f0f0f0;
+            font-size: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            user-select: none;
+            border: 2px solid #dddddd;
+            position: relative;
+            z-index: 2;
+        }
+        .highlight {
+            background-color: #9ecfff;
+            color: white;
+        }
+        .spangram {
+            background-color: #f7d358;
+            color: white;
+        }
+        .spangram.grid-10 {
+            background-color: #ff2a2a;
+            color: white;
+        }
+        .line {
+            position: absolute;
+            width: 4px;
+            height: 10px;
+            background-color: #9ecfff;
+            transform-origin: 0 0;
+            z-index: 1;
+        }
+        .found-word-line {
+            background-color: #4CAF50;
+        }
+        .spangram-line {
+            background-color: #f7d358;
+        }
+        .spangram-line.grid-10 {
+            background-color: #ff2a2a;
+        }
+
+        .current-selection {
+            background-color: #9ecfff !important; /* Couleur de la sélection en cours */
+        }
+
+        .found-word {
+            background-color: #4CAF50; /* Couleur pour les mots trouvés (bleu) */
+            color: white;
+        }
+
+        .found-spangram {
+            background-color: #f7d358; /* Couleur pour le spangram (jaune) */
+            color: white;
+        }
+        .found-spangram.grid-10 {
+            background-color: #ff2a2a; /* Couleur pour le spangram (jaune) */
+            color: white;
+        }
+        #counter {
+            margin-top: 20px;
+            font-size: 1.2em;
+            color: #333;
+        }
+        #congratulations {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(1);
+            background-color: #ffeb3b;
+            color: #333;
+            padding: 20px;
+            border-radius: 20px;
+            text-align: center;
+            z-index: 1000;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+            font-size: 1.5em;
+            transition: transform 0.5s ease-in-out;
+        }
+        #nextGridButton {
+            background-color: #ffffff;
+            border: 2px solid #333;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            color: #333;
+            font-size: 1em;
+            outline: none;
+            transition: background-color 0.3s, color 0.3s;
+            margin-top: 15px;
+        }
+        #nextGridButton:hover {
+            background-color: #ffeb3b;
+            color: #000;
+        }
+        #selectedWordLabel {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            color: #333;
+            transition: color 0.3s, transform 0.3s;
+            text-align: center;
+        }
+
+        #selectedWordLabel.error {
+            animation: shake 0.5s;
+            color: #ff4d4d;
+        }
+
+        #selectedWordLabel.success {
+            color: #4CAF50;
+            animation: pop 0.5s ease-in-out;
+        }
+        #gridSelector {
+            background-color: #f0f0f0;
+            border: 2px solid #ddd;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            color: #333;
+            font-size: 1em;
+            outline: none;
+            margin-left: 10px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .pop-effect {
+            animation: pop 0.5s ease-in-out;
+        }
+
+        #themeBlock {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<h1>Strands <select id="gridSelector">
+    <option value="1">Grille 1</option>
+</select>
+</h1>
+<div id="themeBlock"></div>
+<div id="selectedWordLabel">&nbsp;</div>
+<div id="grid"></div>
+<div id="counter">Mots trouvés : 0 / 6</div>
+<div id="congratulations">
+    <p>Félicitations ! Vous avez terminé cette grille !</p>
+    <button id="nextGridButton">Passer à la grille suivante</button>
+</div>
+
+<script>
+    const unique = (value, index, array) => array.indexOf(value) === index;
+    const isSpangram = (word) => word == 1;
+    const isSelected = (cell) => (
+        cell.classList.contains('found-word') ||
+        cell.classList.contains('found-spangram'));
+    const getCurrentGridWords = () => selectedGrid.gridLetters.flat()
+        .sort((a, b) => a.w - b.w || a.i - b.i)  // Trie par index de mot (w), puis par index de lettre (i)
+        .reduce((words, { l, w }) => {
+            if (!words[w]) {
+                words[w] = "";  // Initialise le mot si ce n'est pas encore fait
+            }
+            words[w] += l;  // Ajoute la lettre au mot correspondant
+            return words;
+        }, []).filter(Boolean);
+
+    const getCurrentGridWordsCount = () => selectedGrid.gridLetters.flat().map(letter => letter.w).filter(unique).length;
+    const getFoundedWordsCount = () => Array.from(gridElement.childNodes)
+        .filter(isSelected)
+        .map(cell => cell.dataset.word)
+        .filter(unique)
+        .length;
+
+    const grids = [{ // Grille 1
+        theme: "Dans le ciel",
+        // SOLAIRES
+        // EQUINOXE
+        // ECLIPSE
+        // CLIMAT
+        // HEURE
+        // LEVER
+        // JAUNE
+        // DORE
+        gridLetters: [
+            [{l:"L",w:4,i:2},{l:"I",w:4,i:3},{l:"M",w:4,i:4},{l:"R",w:8,i:3},{l:"E",w:8,i:4},{l:"U",w:7,i:3}],
+            [{l:"C",w:4,i:1},{l:"A",w:4,i:5},{l:"D",w:8,i:1},{l:"O",w:8,i:2},{l:"A",w:7,i:2},{l:"N",w:7,i:4}],
+            [{l:"T",w:4,i:6},{l:"L",w:6,i:1},{l:"A",w:1,i:4},{l:"L",w:1,i:3},{l:"J",w:7,i:1},{l:"E",w:7,i:5}],
+            [{l:"E",w:6,i:2},{l:"R",w:6,i:5},{l:"I",w:1,i:5},{l:"E",w:3,i:1},{l:"O",w:1,i:2},{l:"S",w:1,i:1}],
+            [{l:"V",w:6,i:3},{l:"E",w:6,i:4},{l:"R",w:1,i:6},{l:"E",w:3,i:7},{l:"C",w:3,i:2},{l:"L",w:3,i:3}],
+            [{l:"S",w:1,i:8},{l:"E",w:1,i:7},{l:"H",w:5,i:1},{l:"S",w:3,i:6},{l:"P",w:3,i:5},{l:"I",w:3,i:4}],
+            [{l:"E",w:5,i:5},{l:"E",w:5,i:2},{l:"E",w:2,i:1},{l:"Q",w:2,i:2},{l:"N",w:2,i:5},{l:"E",w:2,i:8}],
+            [{l:"R",w:5,i:4},{l:"U",w:5,i:3},{l:"U",w:2,i:3},{l:"I",w:2,i:4},{l:"O",w:2,i:6},{l:"X",w:2,i:7}]
+        ]
+    },{ // Grille 2
+        theme: "Soleil",
+        // RAYONNANTE
+        // LUMINEUX
+        // ESTIVALE
+        // PLANETE
+        // SOLEIL
+        // OMBRE
+        // NUIT
+        gridLetters: [
+            [{l:"I",w:7,i:3},{l:"T",w:7,i:4},{l:"U",w:2,i:7},{l:"E",w:2,i:6},{l:"I",w:2,i:4},{l:"M",w:2,i:3}],
+            [{l:"U",w:7,i:2},{l:"X",w:2,i:8},{l:"O",w:1,i:4},{l:"Y",w:1,i:3},{l:"N",w:2,i:5},{l:"U",w:2,i:2}],
+            [{l:"N",w:7,i:1},{l:"N",w:1,i:5},{l:"I",w:3,i:4},{l:"T",w:3,i:3},{l:"A",w:1,i:2},{l:"L",w:2,i:1}],
+            [{l:"N",w:1,i:6},{l:"V",w:3,i:5},{l:"E",w:3,i:1},{l:"S",w:3,i:2},{l:"E",w:3,i:8},{l:"R",w:1,i:1}],
+            [{l:"M",w:6,i:2},{l:"A",w:1,i:7},{l:"A",w:3,i:6},{l:"L",w:3,i:7},{l:"E",w:1,i:10},{l:"E",w:4,i:7}],
+            [{l:"B",w:6,i:3},{l:"O",w:6,i:1},{l:"N",w:1,i:8},{l:"T",w:1,i:9},{l:"E",w:4,i:5},{l:"T",w:4,i:6}],
+            [{l:"R",w:6,i:4},{l:"E",w:6,i:5},{l:"L",w:5,i:3},{l:"O",w:5,i:2},{l:"N",w:4,i:4},{l:"A",w:4,i:3}],
+            [{l:"L",w:5,i:6},{l:"I",w:5,i:5},{l:"E",w:5,i:4},{l:"S",w:5,i:1},{l:"L",w:4,i:2},{l:"P",w:4,i:1}]
+        ]
+    },{ // Grille 3
+        theme: "Une fois par an",
+        // HAPPYBIRTHDAY
+        // CONFETTIS
+        // CARTE
+        // AMOUR
+        // FETE
+        // CADEAUX
+        // TOAST
+        gridLetters: [
+            [{l:"C",w:2,i:1},{l:"O",w:2,i:2},{l:"H",w:1,i:1},{l:"T",w:7,i:1},{l:"O",w:7,i:2},{l:"T",w:7,i:5}],
+            [{l:"F",w:2,i:4},{l:"N",w:2,i:3},{l:"A",w:1,i:2},{l:"P",w:1,i:3},{l:"A",w:7,i:3},{l:"S",w:7,i:4}],
+            [{l:"E",w:2,i:5},{l:"T",w:2,i:6},{l:"T",w:2,i:7},{l:"P",w:1,i:4},{l:"Y",w:1,i:5},{l:"E",w:6,i:4}],
+            [{l:"S",w:2,i:9},{l:"I",w:2,i:8},{l:"I",w:1,i:7},{l:"B",w:1,i:6},{l:"D",w:6,i:3},{l:"A",w:6,i:5}],
+            [{l:"C",w:3,i:1},{l:"R",w:1,i:8},{l:"T",w:1,i:9},{l:"A",w:6,i:2},{l:"C",w:6,i:1},{l:"U",w:6,i:6}],
+            [{l:"R",w:3,i:3},{l:"A",w:3,i:2},{l:"E",w:3,i:5},{l:"H",w:1,i:10},{l:"D",w:1,i:11},{l:"X",w:6,i:7}],
+            [{l:"R",w:4,i:5},{l:"T",w:3,i:4},{l:"A",w:4,i:1},{l:"A",w:1,i:12},{l:"T",w:5,i:3},{l:"F",w:5,i:1}],
+            [{l:"U",w:4,i:4},{l:"O",w:4,i:3},{l:"M",w:4,i:2},{l:"Y",w:1,i:13},{l:"E",w:5,i:4},{l:"E",w:5,i:2}]
+        ]
+    },{ // Grille 4
+        theme: "Réflexion",
+        // REPONSE
+        // INTERROGATION
+        // CHOIX
+        // PROPOSITION
+        // LISTE
+        // OPTIONS
+        gridLetters: [
+            [{l:"T",w:2,i:3},{l:"E",w:2,i:4},{l:"C",w:3,i:1},{l:"H",w:3,i:2},{l:"O",w:3,i:3},{l:"N",w:2,i:13}],
+            [{l:"N",w:2,i:2},{l:"R",w:2,i:5},{l:"X",w:3,i:5},{l:"I",w:3,i:4},{l:"I",w:2,i:11},{l:"O",w:2,i:12}],
+            [{l:"I",w:2,i:1},{l:"R",w:2,i:6},{l:"O",w:2,i:7},{l:"A",w:2,i:9},{l:"T",w:2,i:10},{l:"E",w:1,i:7}],
+            [{l:"R",w:1,i:1},{l:"E",w:1,i:2},{l:"G",w:2,i:8},{l:"N",w:1,i:5},{l:"S",w:1,i:6},{l:"P",w:4,i:1}],
+            [{l:"L",w:5,i:1},{l:"P",w:1,i:3},{l:"O",w:1,i:4},{l:"T",w:4,i:8},{l:"I",w:4,i:7},{l:"R",w:4,i:2}],
+            [{l:"I",w:5,i:2},{l:"N",w:4,i:11},{l:"O",w:4,i:10},{l:"I",w:4,i:9},{l:"S",w:4,i:6},{l:"O",w:4,i:3}],
+            [{l:"S",w:5,i:3},{l:"O",w:6,i:1},{l:"P",w:6,i:2},{l:"I",w:6,i:4},{l:"O",w:4,i:5},{l:"P",w:4,i:4}],
+            [{l:"T",w:5,i:4},{l:"E",w:5,i:5},{l:"T",w:6,i:3},{l:"O",w:6,i:5},{l:"N",w:6,i:6},{l:"S",w:6,i:7}]
+        ]
+    },{ // Grille 5
+        theme: "« … »",
+        // PONCTUATION
+        // PHRASE
+        // POINTS
+        // ESPACE
+        // CHAPITRE
+        // MOTS
+        // VIRGULE
+        gridLetters: [
+            [{l:"I",w:7,i:2},{l:"V",w:7,i:1},{l:"N",w:1,i:3},{l:"C",w:1,i:4},{l:"E",w:4,i:1},{l:"S",w:4,i:2}],
+            [{l:"R",w:7,i:3},{l:"O",w:1,i:2},{l:"N",w:3,i:4},{l:"I",w:3,i:3},{l:"T",w:1,i:5},{l:"P",w:4,i:3}],
+            [{l:"G",w:7,i:4},{l:"P",w:1,i:1},{l:"T",w:3,i:5},{l:"O",w:3,i:2},{l:"U",w:1,i:6},{l:"A",w:4,i:4}],
+            [{l:"U",w:7,i:5},{l:"S",w:3,i:6},{l:"P",w:3,i:1},{l:"A",w:1,i:7},{l:"E",w:4,i:6},{l:"C",w:4,i:5}],
+            [{l:"L",w:7,i:6},{l:"E",w:7,i:7},{l:"T",w:1,i:8},{l:"C",w:5,i:1},{l:"H",w:5,i:2},{l:"A",w:5,i:3}],
+            [{l:"S",w:2,i:5},{l:"E",w:2,i:6},{l:"I",w:1,i:9},{l:"T",w:5,i:6},{l:"I",w:5,i:5},{l:"P",w:5,i:4}],
+            [{l:"A",w:2,i:4},{l:"R",w:2,i:3},{l:"O",w:1,i:10},{l:"R",w:5,i:7},{l:"E",w:5,i:8},{l:"T",w:6,i:3}],
+            [{l:"H",w:2,i:2},{l:"P",w:2,i:1},{l:"N",w:1,i:11},{l:"M",w:6,i:1},{l:"O",w:6,i:2},{l:"S",w:6,i:4}]
+        ]
+    },{ // Grille 6
+        theme: "Africain à 4 pattes",
+        // ANIMAUX
+        // PANTHERE
+        // LION
+        // OURS
+        // TIGRE
+        // CHAMEAU
+        // GAZELLE
+        // JAGUAR
+        gridLetters: [
+            [{l:"A",w:6,i:3},{l:"M",w:6,i:4},{l:"E",w:2,i:8},{l:"T",w:2,i:4},{l:"N",w:2,i:3},{l:"A",w:2,i:2}],
+            [{l:"H",w:6,i:2},{l:"E",w:6,i:5},{l:"R",w:2,i:7},{l:"H",w:2,i:5},{l:"U",w:1,i:6},{l:"P",w:2,i:1}],
+            [{l:"C",w:6,i:1},{l:"A",w:6,i:6},{l:"E",w:2,i:6},{l:"A",w:1,i:5},{l:"R",w:8,i:6},{l:"X",w:1,i:7}],
+            [{l:"A",w:1,i:1},{l:"U",w:6,i:7},{l:"I",w:1,i:3},{l:"M",w:1,i:4},{l:"A",w:8,i:5},{l:"U",w:8,i:4}],
+            [{l:"L",w:3,i:1},{l:"N",w:1,i:2},{l:"T",w:5,i:1},{l:"A",w:8,i:2},{l:"G",w:8,i:3},{l:"E",w:7,i:4}],
+            [{l:"I",w:3,i:2},{l:"O",w:3,i:3},{l:"I",w:5,i:2},{l:"J",w:8,i:1},{l:"Z",w:7,i:3},{l:"L",w:7,i:5}],
+            [{l:"O",w:4,i:1},{l:"N",w:3,i:4},{l:"G",w:5,i:3},{l:"R",w:5,i:4},{l:"A",w:7,i:2},{l:"L",w:7,i:6}],
+            [{l:"U",w:4,i:2},{l:"R",w:4,i:3},{l:"S",w:4,i:4},{l:"E",w:5,i:5},{l:"G",w:7,i:1},{l:"E",w:7,i:7}]
+        ]
+    },{ // Grille 7
+        theme: "Tendances et Nouvelles",
+        // MAGAZINE
+        // STARS
+        // VOGUE
+        // JOURNAL
+        // TITRE
+        // ABONNEMENT
+        // ARTICLES
+        gridLetters: [
+            [{l:"A",w:7,i:1},{l:"R",w:7,i:2},{l:"L",w:4,i:7},{l:"A",w:4,i:6},{l:"N",w:4,i:5},{l:"R",w:4,i:4}],
+            [{l:"T",w:7,i:3},{l:"I",w:7,i:4},{l:"C",w:7,i:5},{l:"E",w:7,i:7},{l:"O",w:4,i:2},{l:"U",w:4,i:3}],
+            [{l:"E",w:1,i:8},{l:"N",w:1,i:4},{l:"L",w:7,i:6},{l:"S",w:7,i:8},{l:"J",w:4,i:1},{l:"E",w:3,i:5}],
+            [{l:"T",w:6,i:10},{l:"E",w:5,i:5},{l:"I",w:1,i:6},{l:"Z",w:1,i:5},{l:"U",w:3,i:4},{l:"G",w:3,i:3}],
+            [{l:"N",w:6,i:9},{l:"R",w:5,i:4},{l:"T",w:5,i:3},{l:"A",w:1,i:4},{l:"V",w:3,i:1},{l:"O",w:3,i:2}],
+            [{l:"E",w:6,i:8},{l:"M",w:6,i:7},{l:"I",w:5,i:2},{l:"T",w:5,i:1},{l:"G",w:1,i:3},{l:"M",w:1,i:1}],
+            [{l:"E",w:6,i:6},{l:"O",w:6,i:3},{l:"B",w:6,i:2},{l:"S",w:2,i:5},{l:"A",w:1,i:2},{l:"S",w:2,i:1}],
+            [{l:"N",w:6,i:5},{l:"N",w:6,i:4},{l:"A",w:6,i:1},{l:"R",w:2,i:4},{l:"A",w:2,i:3},{l:"T",w:2,i:2}]
+        ]
+    },{ // Grille 8
+        theme: "Couleurs et épices",
+        // GUACAMOLE
+        // POIVRON
+        // AVOCAT
+        // ECRASER
+        // TOMATE
+        // TORTILLA
+        // EPICE
+        gridLetters: [
+            [{l:"P",w:2,i:1},{l:"E",w:1,i:9},{l:"T",w:6,i:1},{l:"O",w:6,i:2},{l:"R",w:6,i:3},{l:"T",w:6,i:4}],
+            [{l:"O",w:2,i:2},{l:"V",w:3,i:4},{l:"L",w:1,i:8},{l:"L",w:6,i:7},{l:"L",w:6,i:6},{l:"I",w:6,i:5}],
+            [{l:"I",w:2,i:3},{l:"R",w:3,i:5},{l:"O",w:1,i:7},{l:"A",w:6,i:8},{l:"C",w:7,i:4},{l:"E",w:7,i:5}],
+            [{l:"E",w:4,i:1},{l:"O",w:3,i:6},{l:"A",w:1,i:5},{l:"M",w:1,i:6},{l:"I",w:7,i:3},{l:"P",w:7,i:2}],
+            [{l:"C",w:4,i:2},{l:"N",w:3,i:7},{l:"A",w:3,i:5},{l:"C",w:1,i:4},{l:"E",w:7,i:1},{l:"E",w:5,i:6}],
+            [{l:"R",w:4,i:3},{l:"A",w:4,i:4},{l:"C",w:3,i:4},{l:"T",w:3,i:6},{l:"A",w:1,i:3},{l:"T",w:5,i:5}],
+            [{l:"R",w:4,i:7},{l:"S",w:4,i:5},{l:"O",w:3,i:3},{l:"U",w:1,i:2},{l:"T",w:5,i:1},{l:"A",w:5,i:4}],
+            [{l:"E",w:4,i:6},{l:"A",w:3,i:1},{l:"V",w:3,i:2},{l:"G",w:1,i:1},{l:"O",w:5,i:2},{l:"M",w:5,i:3}]
+        ]
+    },{ // Grille 9
+        theme: "Palette céleste",
+        // ARCENCIEL
+        // ROUGE
+        // VIOLET
+        // VERT
+        // JAUNE
+        // ORANGE
+        // MAGENTA
+        // INDIGO
+        gridLetters: [
+            [{l:"U",w:2,i:3},{l:"E",w:2,i:5},{l:"I",w:3,i:2},{l:"O",w:3,i:3},{l:"T",w:3,i:6},{l:"T",w:4,i:4}],
+            [{l:"O",w:2,i:2},{l:"G",w:2,i:4},{l:"V",w:3,i:1},{l:"L",w:3,i:4},{l:"E",w:3,i:5},{l:"R",w:4,i:3}],
+            [{l:"R",w:2,i:1},{l:"C",w:1,i:3},{l:"E",w:1,i:4},{l:"N",w:1,i:5},{l:"C",w:1,i:6},{l:"E",w:4,i:2}],
+            [{l:"A",w:1,i:1},{l:"R",w:1,i:2},{l:"N",w:5,i:4},{l:"E",w:5,i:5},{l:"I",w:1,i:7},{l:"V",w:4,i:1}],
+            [{l:"J",w:5,i:1},{l:"U",w:5,i:3},{l:"I",w:8,i:1},{l:"N",w:8,i:2},{l:"D",w:8,i:3},{l:"E",w:1,i:8}],
+            [{l:"A",w:5,i:2},{l:"O",w:6,i:1},{l:"T",w:7,i:6},{l:"N",w:7,i:5},{l:"I",w:8,i:4},{l:"L",w:1,i:9}],
+            [{l:"A",w:6,i:3},{l:"R",w:6,i:2},{l:"A",w:7,i:7},{l:"E",w:7,i:4},{l:"G",w:8,i:5},{l:"O",w:8,i:6}],
+            [{l:"N",w:6,i:4},{l:"G",w:6,i:5},{l:"E",w:6,i:6},{l:"G",w:7,i:3},{l:"A",w:7,i:2},{l:"M",w:7,i:1}]
+        ]
+    },{ // Grille 10
+        theme: "Sunny",
+        // IMMENSEMERCI
+        // FAMILLE
+        // JOIE
+        // RIRE
+        // BRILLANT
+        // MEILLEURS
+        // AIME
+        gridLetters: [
+            [{l:"I",w:7,i:2},{l:"M",w:7,i:3},{l:"E",w:2,i:7},{l:"L",w:2,i:6},{l:"L",w:2,i:5},{l:"M",w:2,i:3}],
+            [{l:"A",w:7,i:1},{l:"I",w:1,i:12},{l:"E",w:7,i:4},{l:"M",w:1,i:2},{l:"I",w:2,i:4},{l:"A",w:2,i:2}],
+            [{l:"C",w:1,i:11},{l:"M",w:6,i:1},{l:"I",w:1,i:1},{l:"S",w:6,i:9},{l:"M",w:1,i:3},{l:"F",w:2,i:1}],
+            [{l:"R",w:1,i:10},{l:"E",w:6,i:2},{l:"L",w:6,i:4},{l:"R",w:6,i:8},{l:"E",w:1,i:4},{l:"E",w:3,i:4}],
+            [{l:"E",w:1,i:9},{l:"I",w:6,i:3},{l:"L",w:6,i:5},{l:"U",w:6,i:7},{l:"N",w:1,i:5},{l:"I",w:3,i:3}],
+            [{l:"B",w:5,i:1},{l:"M",w:1,i:8},{l:"E",w:6,i:6},{l:"S",w:1,i:6},{l:"J",w:3,i:1},{l:"O",w:3,i:2}],
+            [{l:"R",w:5,i:2},{l:"I",w:5,i:3},{l:"E",w:1,i:7},{l:"T",w:5,i:8},{l:"E",w:4,i:4},{l:"R",w:4,i:1}],
+            [{l:"L",w:5,i:4},{l:"L",w:5,i:5},{l:"A",w:5,i:6},{l:"N",w:5,i:7},{l:"R",w:4,i:3},{l:"I",w:4,i:2}]
+        ]
+    },{ // Grille 11
+        theme: "A Fond la forme",
+        // ECHAUFFEMENT
+        // SPORTS
+        // FOOT
+        // COURSE
+        // BALLON
+        // WATERPOLO
+        // MATCH
+        gridLetters: [
+            [{l:"O",w:4,i:2},{l:"C",w:4,i:1},{l:"E",w:4,i:6},{l:"O",w:6,i:9},{l:"L",w:6,i:8},{l:"O",w:6,i:7}],
+            [{l:"U",w:4,i:3},{l:"S",w:4,i:5},{l:"F",w:1,i:6},{l:"F",w:1,i:7},{l:"P",w:6,i:6},{l:"R",w:6,i:5}],
+            [{l:"R",w:4,i:4},{l:"U",w:1,i:5},{l:"O",w:3,i:3},{l:"W",w:6,i:1},{l:"E",w:1,i:8},{l:"E",w:6,i:4}],
+            [{l:"A",w:1,i:4},{l:"O",w:3,i:2},{l:"T",w:3,i:4},{l:"A",w:6,i:2},{l:"T",w:6,i:3},{l:"M",w:1,i:9}],
+            [{l:"H",w:1,i:3},{l:"P",w:2,i:2},{l:"F",w:3,i:1},{l:"R",w:2,i:4},{l:"T",w:2,i:5},{l:"E",w:1,i:10}],
+            [{l:"S",w:2,i:1},{l:"C",w:1,i:2},{l:"O",w:2,i:3},{l:"B",w:5,i:1},{l:"N",w:1,i:11},{l:"S",w:2,i:6}],
+            [{l:"T",w:7,i:3},{l:"C",w:7,i:4},{l:"E",w:1,i:1},{l:"T",w:1,i:12},{l:"A",w:5,i:2},{l:"L",w:5,i:3}],
+            [{l:"A",w:7,i:2},{l:"M",w:7,i:1},{l:"H",w:7,i:5},{l:"N",w:5,i:6},{l:"O",w:5,i:5},{l:"L",w:5,i:4}]
+        ]
+    }];
+
+    let selectedCells = [];
+    let selectedGrid = grids[0];
+    let currentGrid = -1;
+    const gridElement = document.getElementById("grid");
+    const gridSelector = document.getElementById('gridSelector');
+    const wordLabel = document.getElementById('selectedWordLabel');
+
+    function populateGridSelector() {
+        gridSelector.innerHTML = ''; // Vide le contenu actuel
+
+        grids.forEach((_, index) => {
+            const option = document.createElement('option');
+            option.value = index + 1;
+            option.text = `Grille ${index + 1}`;
+            gridSelector.appendChild(option);
+        });
+    }
+
+    function loadGrid(gridNumber) {
+        currentGrid = gridNumber == -1 ? 1 : gridNumber;
+        gridSelector.value = currentGrid;
+        selectedGrid = grids[currentGrid - 1];
+        selectedCells = [];
+        localStorage.setItem('currentGrid', currentGrid);
+
+        // Mettre à jour le bloc du thème
+        document.getElementById('themeBlock').textContent = selectedGrid.theme;
+
+        // Initialisez la grille avec les nouvelles données
+        initializeGrid();
+        updateCounter(); // Réinitialisez le compteur
+    }
+
+    function initializeGrid() {
+        gridElement.innerHTML = ''; // Réinitialise la grille
+        selectedGrid.gridLetters.forEach((row, rowIndex) => {
+            row.forEach((letter, colIndex) => {
+                const cell = document.createElement("div");
+                cell.classList.add("cell");
+                cell.textContent = letter.l;
+                cell.dataset.word = letter.w;
+                cell.dataset.index = letter.i;
+                cell.dataset.row = rowIndex;
+                cell.dataset.col = colIndex;
+                cell.addEventListener("touchstart", startSelecting);
+                cell.addEventListener("touchmove", continueSelecting);
+                cell.addEventListener("touchend", finishSelecting);
+                gridElement.appendChild(cell);
+            });
+        });
+        wordLabel.innerHTML = "&nbsp;";
+    }
+
+    function createLine(x1, y1, x2, y2, isSpangram, isSelected, wordClass) {
+        const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+        const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
+        const line = document.createElement("div");
+        line.classList.add("line");
+        if(isSelected) line.classList.add(isSpangram ? "spangram-line" : "found-word-line", wordClass, "grid-" + currentGrid);
+        line.style.width = `${length}px`;
+        line.style.transform = `rotate(${angle}deg)`;
+        line.style.left = `${x1}px`;
+        line.style.top = `${y1}px`;
+        gridElement.appendChild(line);
+        return line;
+    }
+
+    function drawLinesBetweenCells(cells, isSpangram, wordClass) {
+        cells.forEach((cell, index) => {
+            if (index < cells.length - 1) {
+                const nextCell = cells[index + 1];
+
+                // Coordonnées du centre de la cellule actuelle
+                const x1 = cell.offsetLeft + cell.offsetWidth / 2;
+                const y1 = cell.offsetTop + cell.offsetHeight / 2;
+
+                // Coordonnées du centre de la cellule suivante
+                const x2 = nextCell.offsetLeft + nextCell.offsetWidth / 2;
+                const y2 = nextCell.offsetTop + nextCell.offsetHeight / 2;
+
+                // Appel de la fonction createLine existante
+                createLine(x1, y1, x2, y2, isSpangram, true, wordClass);
+            }
+        });
+    }
+
+    function clearSelection() {
+        selectedCells.forEach(cell => {
+            cell.classList.remove("current-selection");
+            if (cell.line) {
+                gridElement.removeChild(cell.line);
+                cell.line = null;
+            }
+        });
+        selectedCells = [];
+    }
+
+    function startSelecting(e) {
+        e.preventDefault();
+        clearSelection();
+        const cell = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+        if (cell && cell.classList.contains('cell')) {
+            selectedCells = [cell];
+            cell.classList.add("current-selection");
+        }
+    }
+
+    function continueSelecting(e) {
+        e.preventDefault();
+        const cell = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+        if (cell && cell.classList.contains('cell') && !selectedCells.includes(cell)) {
+            const lastCell = selectedCells[selectedCells.length - 1];
+            const dx = Math.abs(lastCell.dataset.row - cell.dataset.row);
+            const dy = Math.abs(lastCell.dataset.col - cell.dataset.col);
+
+            if (dx <= 1 && dy <= 1) {
+                selectedCells.push(cell);
+                cell.classList.add("current-selection");
+
+                const selectedWord = selectedCells.map(cell => cell.textContent).join("");
+                wordLabel.textContent = selectedWord;
+
+                const x1 = lastCell.offsetLeft + lastCell.offsetWidth / 2;
+                const y1 = lastCell.offsetTop + lastCell.offsetHeight / 2;
+                const x2 = cell.offsetLeft + cell.offsetWidth / 2;
+                const y2 = cell.offsetTop + cell.offsetHeight / 2;
+
+                cell.line = createLine(x1, y1, x2, y2, false);
+            }
+        } else if (selectedCells.includes(cell)) {
+            const index = selectedCells.indexOf(cell);
+            selectedCells.slice(index + 1).forEach(c => {
+                c.classList.remove("current-selection");
+                if (c.line) {
+                    gridElement.removeChild(c.line);
+                    c.line = null;
+                }
+            });
+            selectedCells = selectedCells.slice(0, index + 1);
+        }
+    }
+
+    function finishSelecting() {
+        const words = getCurrentGridWords();
+        const selectedWord = selectedCells.map(cell => cell.textContent).join("");
+        clearSelection();
+
+        if (words.includes(selectedWord)) {
+            const foundedWordIndex = words.indexOf(selectedWord) + 1;
+            // Recherche les cellules à mettre en surbrillance
+            const cells = Array.from(gridElement.childNodes)
+                .filter(cell => cell.dataset.word == foundedWordIndex)
+                .sort((a, b) => a.dataset.index - b.dataset.index);
+            if(isSelected(cells[0])) {
+                wordLabel.textContent = "Mot déjà trouvé !";
+                wordLabel.classList.add('success');
+                setTimeout(() => wordLabel.classList.remove('success'), 1000);
+            } else {
+                const wordClass = `word-${selectedWord}`;
+
+                cells.forEach((cell, index) => {
+                    cell.classList.add(isSpangram(foundedWordIndex) ? "found-spangram" : "found-word", wordClass, "pop-effect", "grid-" + currentGrid);
+
+                    addTapHoldListener(cell, function() {
+                        removeWord(selectedWord);
+                    });
+
+                    // Supprimer l'effet pop après l'animation pour réinitialiser l'état
+                    setTimeout(() => {
+                        cell.classList.remove("pop-effect");
+                    }, 500);
+                });
+                // Crée les lignes entre chaque lettre
+                drawLinesBetweenCells(cells, isSpangram(foundedWordIndex), wordClass);
+
+                wordLabel.textContent = selectedWord;
+                wordLabel.classList.add('success');
+                setTimeout(() => wordLabel.classList.remove('success'), 1000);
+                updateCounter();
+
+                if(isSpangram(foundedWordIndex) && currentGrid == 10) {
+                    createLine(76.5,76.5,131.5,131.5, true, true, wordClass);
+                }
+
+                if (getFoundedWordsCount() === getCurrentGridWordsCount()) {
+                    showCongratulations();
+                }
+            }
+        } else {
+            wordLabel.textContent = "Désolé, pas dans la liste 😔";
+            wordLabel.classList.add('error');
+            setTimeout(() => wordLabel.classList.remove('error'), 1000);
+        }
+    }
+
+    function addTapHoldListener(element, callback, holdTime = 750) {
+        let timer = null;
+
+        element.addEventListener('touchstart', function() {
+            timer = setTimeout(() => {
+                callback(); // Appeler la fonction de rappel après le temps défini
+            }, holdTime);
+        });
+
+        element.addEventListener('touchend', function() {
+            if (timer) {
+                clearTimeout(timer); // Annuler si le doigt est levé avant la fin du holdTime
+            }
+        });
+
+        element.addEventListener('touchmove', function() {
+            if (timer) {
+                clearTimeout(timer); // Annuler si le doigt se déplace
+            }
+        });
+    }
+
+    function removeWord(word) {
+        // const wordIndex = foundWords.indexOf(word);
+        // if (wordIndex !== -1) {
+        //     foundWords.splice(wordIndex, 1); // Retirer le mot de la liste des mots trouvés
+
+        //     const wordClass = `word-${word}`;
+        //     const elements = document.querySelectorAll(`.${wordClass}`);
+
+        //     elements.forEach(element => {
+        //         element.classList.remove("found-word", "found-spangram", "found-word-line", "spangram-line", wordClass, "grid-" + currentGrid);
+
+        //         // Supprimer les lignes correspondantes
+        //         if (element.classList.contains('line')) {
+        //             element.remove();
+        //         }
+        //     });
+
+        //     updateCounter(); // Mettre à jour le compteur de mots trouvés
+        // }
+    }
+
+    function updateCounter() {
+        const counterElement = document.getElementById('counter');
+        counterElement.textContent = `Mots trouvés : ${getFoundedWordsCount()} / ${getCurrentGridWordsCount()}`;
+    }
+
+    function showCongratulations() {
+        document.getElementById('congratulations').style.display = 'block';
+    }
+
+    function hideCongratulations() {
+        document.getElementById('congratulations').style.display = 'none';
+    }
+
+    gridSelector.addEventListener('change', function() {
+        if (getFoundedWordsCount() > 0 && getFoundedWordsCount() < getCurrentGridWordsCount()) {
+            const confirmChange = confirm("Vous avez trouvé des mots mais pas tous. Voulez-vous vraiment changer de grille ?");
+            if (!confirmChange) {
+                this.value = currentGrid; // Revenir à la grille actuelle
+                return;
+            }
+        }
+        loadGrid(this.value);
+    });
+
+    document.getElementById('nextGridButton').addEventListener('click', function() {
+        const nextGrid = parseInt(currentGrid, 10) + 1;
+        if (nextGrid <= grids.length) {
+            gridSelector.value = nextGrid;
+            loadGrid(nextGrid);
+            document.getElementById('congratulations').style.display = 'none';
+        } else {
+            alert("Vous avez terminé toutes les grilles disponibles !");
+            hideCongratulations();
+        }
+    });
+
+    populateGridSelector();
+    const savedGrid = localStorage.getItem('currentGrid');
+    loadGrid(savedGrid ? savedGrid : gridSelector.value);
+</script>
+
+</body>
+</html>
