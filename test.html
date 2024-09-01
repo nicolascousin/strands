@@ -614,6 +614,8 @@
         if (gridSelection.classList.contains('show') && !gridSelection.contains(event.target) && !toggleButton.contains(event.target)) {
             gridSelection.classList.remove('show')
         }
+
+        hideCongratulations();
     }
 
     // Ajoute l'écouteur d'événement au document pour détecter les clics
