@@ -17,6 +17,9 @@
         h1 {
             margin-top: 20px;
             font-size: 1.5em;
+            display: grid;
+            grid-template-columns: auto auto auto;
+            gap: 0.5em;
         }
         #theme {
             background-color: #d9edf7;
@@ -152,17 +155,50 @@
             color: #4CAF50;
             animation: pop 0.5s ease-in-out;
         }
-        #gridSelector {
-            background-color: #f0f0f0;
-            border: 2px solid #ddd;
-            padding: 10px 20px;
-            border-radius: 20px;
+
+        #gridSelection {
+            display: grid;
+            position: fixed;
+            top: 2em;
+            z-index: 10;
+            max-height: 0; /* Initialement caché */
+            overflow: hidden;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            padding: 0 20px; /* Pas de padding vertical pour cacher */
+            transition: max-height 0.3s ease-in-out, padding 0.3s ease-in-out;
+            overflow-y: auto;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            align-items:center;
+        }
+         #gridSelection.show {
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid #ccc;
+            max-height: 70vh; /* Hauteur maximale lorsque déroulé */
+            padding: 20px; /* Ajouter du padding vertical lorsque déroulé */
+        }
+
+        .grid-item {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            border: 1px solid #3000ff;
+            background-color: #cae0ff;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
             cursor: pointer;
-            color: #333;
-            font-size: 1em;
-            outline: none;
-            margin-left: 10px;
-            transition: background-color 0.3s, color 0.3s;
+            transition: transform 0.3s, box-shadow 0.3s;
+            font-size: 1.2em;
+        }
+
+        .grid-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .grid-item.selected {
+            background-color: #d1e7fd;
         }
 
         @keyframes shake {
@@ -192,10 +228,9 @@
     </style>
 </head>
 <body>
-<h1>Strands <select id="gridSelector">
-    <option value="1">Grille 1</option>
-</select>
-</h1>
+<h1><div id="title">Strands -</div><div id="gridValue"></div><button id="toggleGridSelection">Changer</button></h1>
+
+<div id="gridSelection"></div>
 <div id="themeBlock"></div>
 <div id="selectedWordLabel">&nbsp;</div>
 <div id="grid"></div>
@@ -520,26 +555,53 @@
     let selectedGrid = grids[0];
     let currentGrid = -1;
     const gridElement = document.getElementById("grid");
-    const gridSelector = document.getElementById('gridSelector');
+    const gridValue = document.getElementById("gridValue");
     const wordLabel = document.getElementById('selectedWordLabel');
 
-    function populateGridSelector() {
-        gridSelector.innerHTML = ''; // Vide le contenu actuel
+    function generateGridPreviews() {
+        const gridSelection = document.getElementById('gridSelection');
+        gridSelection.innerHTML = ''; // Vide le contenu actuel
 
-        grids.forEach((_, index) => {
-            const option = document.createElement('option');
-            option.value = index + 1;
-            option.text = `Grille ${index + 1}`;
-            gridSelector.appendChild(option);
+        grids.forEach((grid, index) => {
+            const gridItem = document.createElement('div');
+            gridItem.classList.add('grid-item');
+            gridItem.onclick = () => selectGrid(index + 1);
+
+            const gridPreview = document.createElement('div');
+            gridPreview.classList.add('grid-preview');
+            gridPreview.textContent = index + 1; // Affiche le numéro de la grille
+
+            const gridTheme = document.createElement('div');
+            gridTheme.classList.add('grid-theme');
+            gridTheme.textContent = grid.theme;
+
+            gridItem.appendChild(gridPreview);
+            gridItem.appendChild(gridTheme);
+            gridSelection.appendChild(gridItem);
         });
+
     }
+
+    function handleOutsideClick(event) {
+        const gridSelection = document.getElementById('gridSelection');
+        const toggleButton = document.getElementById('toggleGridSelection');
+
+        // Vérifie si le clic est en dehors de gridSelection et du bouton de toggle
+        if (gridSelection.classList.contains('show') && !gridSelection.contains(event.target) && !toggleButton.contains(event.target)) {
+            gridSelection.classList.remove('show')
+        }
+    }
+
+    // Ajoute l'écouteur d'événement au document pour détecter les clics
+    document.addEventListener('click', handleOutsideClick);
 
     function loadGrid(gridNumber) {
         currentGrid = gridNumber == -1 ? 1 : gridNumber;
-        gridSelector.value = currentGrid;
         selectedGrid = grids[currentGrid - 1];
         selectedCells = [];
         localStorage.setItem('currentGrid', currentGrid);
+
+        gridValue.innerText = 'Grille ' + currentGrid;
 
         // Mettre à jour le bloc du thème
         document.getElementById('themeBlock').textContent = selectedGrid.theme;
@@ -547,9 +609,11 @@
         // Initialisez la grille avec les nouvelles données
         initializeGrid();
         updateCounter(); // Réinitialisez le compteur
+        generateGridPreviews();
     }
 
     function initializeGrid() {
+        hideCongratulations();
         gridElement.innerHTML = ''; // Réinitialise la grille
         selectedGrid.gridLetters.forEach((row, rowIndex) => {
             row.forEach((letter, colIndex) => {
@@ -568,6 +632,27 @@
         });
         wordLabel.innerHTML = "&nbsp;";
     }
+
+    function toggleGridSelection() {
+        const gridSelection = document.getElementById('gridSelection');
+
+        if (!gridSelection.classList.contains('show')) {
+            scrollToSelectedGrid(); // Assure que la grille sélectionnée est visible
+            setTimeout(() => gridSelection.classList.add('show'), 10); // Délai pour activer l'animation
+        } else {
+            gridSelection.classList.remove('show');
+        }
+    }
+
+    function scrollToSelectedGrid() {
+        const selectedItem = document.querySelector('.grid-item.selected');
+        if (selectedItem) {
+            selectedItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+
+    document.getElementById('toggleGridSelection').addEventListener('click', toggleGridSelection);
+
 
     function createLine(x1, y1, x2, y2, isSpangram, isSelected, wordClass) {
         const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
@@ -767,21 +852,19 @@
         document.getElementById('congratulations').style.display = 'none';
     }
 
-    gridSelector.addEventListener('change', function() {
+    function selectGrid(gridValue) {
         if (getFoundedWordsCount() > 0 && getFoundedWordsCount() < getCurrentGridWordsCount()) {
-            const confirmChange = confirm("Vous avez trouvé des mots mais pas tous. Voulez-vous vraiment changer de grille ?");
-            if (!confirmChange) {
-                this.value = currentGrid; // Revenir à la grille actuelle
-                return;
+            if (confirm("Vous avez trouvé des mots mais pas tous. Voulez-vous vraiment changer de grille ?")) {
+                loadGrid(gridValue);
             }
+        } else {
+            loadGrid(gridValue);
         }
-        loadGrid(this.value);
-    });
+    }
 
     document.getElementById('nextGridButton').addEventListener('click', function() {
         const nextGrid = parseInt(currentGrid, 10) + 1;
         if (nextGrid <= grids.length) {
-            gridSelector.value = nextGrid;
             loadGrid(nextGrid);
             document.getElementById('congratulations').style.display = 'none';
         } else {
@@ -790,9 +873,8 @@
         }
     });
 
-    populateGridSelector();
     const savedGrid = localStorage.getItem('currentGrid');
-    loadGrid(savedGrid ? savedGrid : gridSelector.value);
+    loadGrid(savedGrid ?? 1);
 </script>
 
 </body>
