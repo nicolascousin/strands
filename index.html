@@ -20,6 +20,7 @@
             display: grid;
             grid-template-columns: auto auto auto;
             gap: 0.5em;
+            align-items:center;
         }
         #theme {
             background-color: #d9edf7;
@@ -112,7 +113,8 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%) scale(1);
-            background-color: #ffeb3b;
+            background-color: #cae0ff;
+            border: 1px solid #3000ff;
             color: #333;
             padding: 20px;
             border-radius: 20px;
@@ -122,7 +124,7 @@
             font-size: 1.5em;
             transition: transform 0.5s ease-in-out;
         }
-        #nextGridButton {
+        .button {
             background-color: #ffffff;
             border: 2px solid #333;
             padding: 10px 20px;
@@ -132,10 +134,13 @@
             font-size: 1em;
             outline: none;
             transition: background-color 0.3s, color 0.3s;
+        }
+        #nextGridButton {
             margin-top: 15px;
         }
+
         #nextGridButton:hover {
-            background-color: #ffeb3b;
+            background-color: #cae0ff;
             color: #000;
         }
         #selectedWordLabel {
@@ -228,7 +233,7 @@
     </style>
 </head>
 <body>
-<h1><div id="title">Strands -</div><div id="gridValue"></div><button id="toggleGridSelection">Changer</button></h1>
+<h1><div id="title">Strands -</div><div id="gridValue"></div><button id="toggleGridSelection" class="button">Changer</button></h1>
 
 <div id="gridSelection"></div>
 <div id="themeBlock"></div>
@@ -236,8 +241,8 @@
 <div id="grid"></div>
 <div id="counter">Mots trouvés : 0 / 6</div>
 <div id="congratulations">
-    <p>Félicitations ! Vous avez terminé cette grille !</p>
-    <button id="nextGridButton">Passer à la grille suivante</button>
+    <p>Félicitations !</p>
+    <button id="nextGridButton" class="button">Suivant</button>
 </div>
 
 <script>
@@ -610,6 +615,8 @@
         if (gridSelection.classList.contains('show') && !gridSelection.contains(event.target) && !toggleButton.contains(event.target)) {
             gridSelection.classList.remove('show')
         }
+
+        hideCongratulations();
     }
 
     // Ajoute l'écouteur d'événement au document pour détecter les clics
